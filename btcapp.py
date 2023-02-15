@@ -25,7 +25,7 @@ def convert_df(df):
 
 csv = convert_df(sample_sheet)
 
-st.write("Download sample CSV file, if needed, and refresh page")
+st.write("Download sample CSV file, if needed, and input transactions")
 st.download_button(
     label="Download",
     data=csv,
