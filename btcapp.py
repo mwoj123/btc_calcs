@@ -1,5 +1,5 @@
 import pandas as pd
-#pathlib
+
 import numpy as np
 from pycoingecko import CoinGeckoAPI
 cg = CoinGeckoAPI()
@@ -214,7 +214,7 @@ if st.button("Run"):
 
 
 
-    #st.write(df_buy)
+    df_buy = df_buy.sort_values(by='Timestamp')
 
     st.text('')
     st.text('')
