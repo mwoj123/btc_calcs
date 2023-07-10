@@ -18,7 +18,6 @@ sample_sheet.set_index('Date', inplace=True)
 
 
 # Function to download output as CSV
-@st.cache
 def convert_df(df):
 #IMPORTANT: Cache the conversion to prevent computation on every rerun
     return df.to_csv().encode('utf-8')
@@ -48,13 +47,6 @@ if st.button("Run"):
     with st.spinner('Calculating'):
         time.sleep(3)
     balance = float(balance)
-
-    # df = pd.read_csv(
-    #     Path('C:/Users/mwoji/FinTech-Workspace/btc/Resources/txns.csv'), 
-    #     index_col="Date", 
-    #     infer_datetime_format=True, 
-    #     parse_dates=True
-    # )
 
 
     df_new = df.drop(["Sent Quantity", "Sent Currency", "Fee Currency", "Fee Amount", "Source"], axis=1)
@@ -228,6 +220,41 @@ if st.button("Run"):
 
     st.text('')
     st.text('')
+    st.text('Form 8949 format:')
+
+    # Prior to dropping the 'Sale Amount' and 'Sell Price' columns
+    gain_loss_df['Proceeds'] = gain_loss_df['Sale Amount'] * gain_loss_df['Sell Price']
+
+    # Create the result dataframe
+    result_df = gain_loss_df.copy()
+
+    # Append "BTC" to the Sale Amount column
+    result_df['Sale Amount BTC'] = result_df['Sale Amount'].astype(str) + " BTC"
+
+    # Create Cost Basis column as Purchase Price times the Sale Amount
+    result_df['Cost Basis'] = result_df['Purchase Price'] * result_df['Sale Amount']
+
+    # Drop the columns you don't want
+    result_df = result_df.drop(columns=['Sale Amount', 'Purchase Price', 'Sell Price', 'Gain/Loss'])
+
+    # Reorder the columns
+    result_df = result_df[['Sale Amount BTC', 'Buy Date', 'Cost Basis', 'Sell Date', 'Proceeds']]
+
+    # Convert 'Buy Date' and 'Sell Date' to string and slice the first 10 characters
+    result_df['Buy Date'] = result_df['Buy Date'].astype(str).str[:10]
+    result_df['Sell Date'] = result_df['Sell Date'].astype(str).str[:10]
+
+    # Rename the columns
+    result_df = result_df.rename(columns={
+        'Sale Amount BTC': 'Currency Name',
+        'Buy Date': 'Purchase Date',
+        'Cost Basis': 'Cost Basis',
+        'Sell Date': 'Date Sold',
+        'Proceeds': 'Proceeds'
+    })
+
+    st.write(result_df)
+
     st.text('')
     st.text('Here are the gains/losses for each purchase tax lot')
 
@@ -245,7 +272,7 @@ if st.button("Run"):
     gain_loss_by_sell_day
 
     # Function to download output as CSV
-    @st.cache
+
     def convert_df(df):
     #IMPORTANT: Cache the conversion to prevent computation on every rerun
         return df.to_csv().encode('utf-8')
@@ -259,62 +286,13 @@ if st.button("Run"):
         file_name='output.csv',
         mime='text/csv',
     )
-    st.text('')
-    st.text('')
-    st.text('SEE BELOW!!  NEW FEATURE!!')
-    st.text('To optimize your taxes, consider using the below advanced feature.')
-    st.text('To do so, first enter your 12 or 24 word seed phrase:')  
 
+    tax_output = convert_df(result_df)
 
-    st.text_input('1')
-
-    st.text_input('2')
-
-    st.text_input('3')
-
-    st.text_input('4')
-
-    st.text_input('5')
- 
-    st.text_input('6')
-
-    st.text_input('7')
-
-    st.text_input('8')
-
-    st.text_input('9')
-
-    st.text_input('10')
-
-    st.text_input('11')
-
-    st.text_input('12')
-
-    st.text_input('13')
-
-    st.text_input('14')
-
-    st.text_input('15')
-
-    st.text_input('16')
-
-    st.text_input('17')
-
-    st.text_input('18')
-
-    st.text_input('19')
-
-    st.text_input('20')
-
-    st.text_input('21')
-
-    st.text_input('22')
-
-    st.text_input('23')
-
-    st.text_input('24')
-
-    st.text('Dont actually do this...')
-
-
-
+    st.write("Click to download 8949")
+    st.download_button(
+        label="Download 8949 first 5 columns",
+        data=tax_output,
+        file_name='tax_output.csv',
+        mime='text/csv',
+    )
